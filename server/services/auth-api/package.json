@@ -5,13 +5,14 @@
   "main": ".dist/entry-points/api/server.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "ts-node-dev --respawn --transpile-only src/entry-points/api/server.ts",
+    "dev": "tsx watch src/entry-points/api/server.ts",
     "start": "node .dist/entry-points/api/server.js"
   },
   "dependencies": {
     "@naija-bi/error-handling": "workspace:*",
     "@naija-bi/logger": "workspace:*",
     "@naija-bi/mongo-client": "workspace:*",
+    "dotenv": "17.4.2",
     "bcryptjs": "3.0.3",
     "convict": "6.2.5",
     "cors": "2.8.6",
@@ -28,7 +29,6 @@
     "@types/express": "5.0.6",
     "@types/jsonwebtoken": "9.0.10",
     "@types/node": "26.6.2",
-    "ts-node-dev": "2.0.0",
     "typescript": "7.0.2"
   }
 }

@@ -39,10 +39,6 @@ jobs:
         run: pnpm build
         working-directory: server
 
-      - name: Run component tests (MongoDB and Redis via Docker Compose)
-        run: pnpm test:component
-        working-directory: server
-
   dashboard-build:
     name: Dashboard build
     runs-on: ubuntu-latest

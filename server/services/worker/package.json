@@ -5,7 +5,7 @@
   "main": ".dist/entry-points/worker/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "ts-node-dev --respawn --transpile-only src/entry-points/worker/index.ts",
+    "dev": "tsx watch src/entry-points/worker/index.ts",
     "start": "node .dist/entry-points/worker/index.js"
   },
   "dependencies": {
@@ -14,6 +14,7 @@
     "@naija-bi/logger": "workspace:*",
     "@naija-bi/mongo-client": "workspace:*",
     "@naija-bi/queue-client": "workspace:*",
+    "dotenv": "17.4.2",
     "bullmq": "6.3.8",
     "convict": "6.2.5",
     "csv-parse": "7.0.2",
@@ -22,7 +23,6 @@
   "devDependencies": {
     "@types/convict": "6.1.6",
     "@types/node": "26.6.2",
-    "ts-node-dev": "2.0.0",
     "typescript": "7.0.2"
   }
 }

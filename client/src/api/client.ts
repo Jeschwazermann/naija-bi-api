@@ -1,13 +1,16 @@
-import type { Session } from './types';
+import type { Session } from "./types";
 
 // ---------------------------------------------------------------------
 // Config — point these at wherever the three APIs are actually running.
 // ---------------------------------------------------------------------
-export const AUTH_API = import.meta.env.VITE_AUTH_API ?? 'http://localhost:3002';
-export const UPLOAD_API = import.meta.env.VITE_UPLOAD_API ?? 'http://localhost:3000';
-export const ANALYTICS_API = import.meta.env.VITE_ANALYTICS_API ?? 'http://localhost:3001';
+export const AUTH_API =
+  import.meta.env.VITE_AUTH_API ?? "http://localhost:4100";
+export const UPLOAD_API =
+  import.meta.env.VITE_UPLOAD_API ?? "http://localhost:4000";
+export const ANALYTICS_API =
+  import.meta.env.VITE_ANALYTICS_API ?? "http://localhost:4200";
 
-const STORAGE_KEY = 'naija-bi-session';
+const STORAGE_KEY = "naija-bi-session";
 
 // ✅ Best Practice: localStorage read/write lives in exactly one place —
 // components never touch it directly, they go through SessionContext,
@@ -36,7 +39,7 @@ export function getAccessToken(): string | undefined {
 // ✅ Best Practice: this event is how apiFetch tells the rest of the app
 // "the session is dead" without importing React or the context module —
 // keeps this file framework-agnostic and easy to unit test on its own.
-const SESSION_EXPIRED_EVENT = 'naija-bi:session-expired';
+const SESSION_EXPIRED_EVENT = "naija-bi:session-expired";
 export function onSessionExpired(handler: () => void): () => void {
   window.addEventListener(SESSION_EXPIRED_EVENT, handler);
   return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handler);
@@ -45,15 +48,22 @@ export function onSessionExpired(handler: () => void): () => void {
 async function tryRefresh(refreshToken: string): Promise<boolean> {
   try {
     const res = await fetch(`${AUTH_API}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
     });
     if (!res.ok) return false;
-    const data = (await res.json()) as { accessToken: string; refreshToken: string };
+    const data = (await res.json()) as {
+      accessToken: string;
+      refreshToken: string;
+    };
     const current = readSession();
     if (!current) return false;
-    writeSession({ ...current, accessToken: data.accessToken, refreshToken: data.refreshToken });
+    writeSession({
+      ...current,
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+    });
     return true;
   } catch {
     return false;
@@ -72,12 +82,12 @@ export async function apiFetch<T>(
   base: string,
   path: string,
   options: RequestInit = {},
-  { auth = true, retry = true }: ApiFetchOptions = {}
+  { auth = true, retry = true }: ApiFetchOptions = {},
 ): Promise<T> {
   const current = readSession();
   const headers = new Headers(options.headers);
   if (auth && current?.accessToken) {
-    headers.set('Authorization', `Bearer ${current.accessToken}`);
+    headers.set("Authorization", `Bearer ${current.accessToken}`);
   }
 
   const response = await fetch(`${base}${path}`, { ...options, headers });
@@ -89,7 +99,7 @@ export async function apiFetch<T>(
     }
     clearSession();
     window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
-    throw new Error('session-expired');
+    throw new Error("session-expired");
   }
 
   if (!response.ok) {

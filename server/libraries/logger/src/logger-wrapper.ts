@@ -34,6 +34,7 @@ class PinoLoggerWrapper implements Logger {
 export function createLogger(config: LoggerConfiguration): Logger {
   const pinoInstance = pino({
     level: config.level,
+    timestamp: pino.stdTimeFunctions.isoTime,
     base: { service: config.serviceName },
     transport: config.prettyPrint
       ? { target: 'pino-pretty', options: { colorize: true } }

@@ -1,0 +1,17 @@
+{
+  "name": "@naija-bi/mongo-client",
+  "version": "1.0.0",
+  "files": [".dist"],
+  "main": ".dist/index.js",
+  "types": ".dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "mongodb": "7.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.2",
+    "typescript": "7.0.2"
+  }
+}

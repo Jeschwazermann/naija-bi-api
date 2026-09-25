@@ -1,0 +1,120 @@
+# Production backend stack only. MongoDB and Redis are managed services whose
+# authenticated connection URLs are supplied through server/.env or the host.
+# The static dashboard is built and hosted separately.
+services:
+  auth-api:
+    build:
+      context: .
+      dockerfile: services/auth-api/Dockerfile
+    environment:
+      NODE_ENV: production
+      AUTH_API_PORT: 3002
+      MONGODB_URL: ${MONGODB_URL:?Set MONGODB_URL to the authenticated managed MongoDB URL}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
+    ports:
+      - "${API_BIND_ADDRESS:-127.0.0.1}:${AUTH_API_HOST_PORT:-3002}:3002"
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  upload-api:
+    build:
+      context: .
+      dockerfile: services/upload-api/Dockerfile
+    environment:
+      NODE_ENV: production
+      UPLOAD_API_PORT: 3000
+      MONGODB_URL: ${MONGODB_URL:?Set MONGODB_URL to the authenticated managed MongoDB URL}
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL to the authenticated managed Redis URL}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-s3}
+      STORAGE_LOCAL_PATH: /data/uploads
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_REGION: ${S3_REGION:-eu-west-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+    ports:
+      - "${API_BIND_ADDRESS:-127.0.0.1}:${UPLOAD_API_HOST_PORT:-3000}:3000"
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/worker/Dockerfile
+    environment:
+      NODE_ENV: production
+      MONGODB_URL: ${MONGODB_URL:?Set MONGODB_URL to the authenticated managed MongoDB URL}
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL to the authenticated managed Redis URL}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-5}
+      HEALTH_PORT: 8080
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-s3}
+      STORAGE_LOCAL_PATH: /data/uploads
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_REGION: ${S3_REGION:-eu-west-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+    expose: ["8080"]
+    restart: unless-stopped
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  analytics-api:
+    build:
+      context: .
+      dockerfile: services/analytics-api/Dockerfile
+    environment:
+      NODE_ENV: production
+      ANALYTICS_API_PORT: 3001
+      MONGODB_URL: ${MONGODB_URL:?Set MONGODB_URL to the authenticated managed MongoDB URL}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
+    ports:
+      - "${API_BIND_ADDRESS:-127.0.0.1}:${ANALYTICS_API_HOST_PORT:-3001}:3001"
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

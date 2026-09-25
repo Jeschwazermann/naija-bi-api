@@ -1,0 +1,19 @@
+{
+  "name": "@naija-bi/error-handling",
+  "version": "1.0.0",
+  "files": [".dist"],
+  "main": ".dist/index.js",
+  "types": ".dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@naija-bi/logger": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.2",
+    "express": "5.2.1",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,8 @@
+packages:
+  - "libraries/*"
+  - "services/*"
+allowBuilds:
+  esbuild: true
+  '@parcel/watcher': false
+  msgpackr-extract: false
+  unrs-resolver: false

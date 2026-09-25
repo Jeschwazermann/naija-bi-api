@@ -1,0 +1,39 @@
+{
+  "name": "naija-bi-api",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Nigerian business intelligence API - CSV upload, async processing, analytics",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter=./libraries/** run build && pnpm -r --filter=./services/** run build",
+    "dev:auth-api": "pnpm --filter @naija-bi/auth-api run dev",
+    "dev:upload-api": "pnpm --filter @naija-bi/upload-api run dev",
+    "dev:worker": "pnpm --filter @naija-bi/worker run dev",
+    "dev:analytics-api": "pnpm --filter @naija-bi/analytics-api run dev",
+    "dev:dashboard": "cd ../client && pnpm run dev",
+    "lint": "eslint . --ext .ts",
+    "test": "pnpm build && pnpm test:component",
+    "test:component": "jest --runInBand"
+  },
+  "devDependencies": {
+    "@types/jest": "30.0.0",
+    "@types/node": "26.6.2",
+    "@typescript-eslint/eslint-plugin": "8.70.1",
+    "@typescript-eslint/parser": "8.70.1",
+    "axios": "^1.20.0",
+    "eslint": "10.11.0",
+    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prettier": "5.5.6",
+    "jest": "30.5.2",
+    "nock": "14.0.17",
+    "prettier": "3.9.8",
+    "sinon": "^22.1.0",
+    "ts-jest": "29.4.12",
+    "ts-node-dev": "2.0.0",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,7 @@
+Date,Product,Category,Quantity,Amount
+01/09/2026,Rice 50kg,Groceries,2,"₦85,000"
+01/09/2026,Vegetable Oil 5L,Groceries,3,"₦22,500"
+02/09/2026,Rice 50kg,Groceries,1,"₦42,500"
+02/09/2026,Beans 10kg,Groceries,4,"₦18,000"
+03/09/2026,Garri 25kg,Groceries,,not-a-number
+03/09/2026,Sugar 5kg,Groceries,2,"₦8,000"

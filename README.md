@@ -73,10 +73,10 @@ pnpm install
 cp .env.example .env          # defaults already match docker-compose
 
 # 4. run each service in its own terminal
-pnpm run dev:auth-api           # :3002
-pnpm run dev:upload-api         # :3000
+pnpm run dev:auth-api           # :4100
+pnpm run dev:upload-api         # :4000
 pnpm run dev:worker
-pnpm run dev:analytics-api      # :3001
+pnpm run dev:analytics-api      # :4200
 
 # 5. install and run the dashboard in another terminal
 cd ../client

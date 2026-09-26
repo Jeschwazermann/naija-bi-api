@@ -8,12 +8,12 @@ services:
       dockerfile: services/auth-api/Dockerfile
     environment:
       NODE_ENV: production
-      AUTH_API_PORT: 3002
+      AUTH_API_PORT: 4100
       MONGODB_URL: ${MONGODB_URL:?Set MONGODB_URL to the authenticated managed MongoDB URL}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
     ports:
-      - "${API_BIND_ADDRESS:-127.0.0.1}:${AUTH_API_HOST_PORT:-3002}:3002"
+      - "${API_BIND_ADDRESS:-127.0.0.1}:${AUTH_API_HOST_PORT:-4100}:4100"
     restart: unless-stopped
     deploy:
       replicas: 1
@@ -22,7 +22,7 @@ services:
           cpus: "0.50"
           memory: 512M
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4100/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -46,7 +46,7 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
     ports:
-      - "${API_BIND_ADDRESS:-127.0.0.1}:${UPLOAD_API_HOST_PORT:-3000}:3000"
+      - "${API_BIND_ADDRESS:-127.0.0.1}:${UPLOAD_API_HOST_PORT:-4000}:4000"
     restart: unless-stopped
     deploy:
       replicas: 1
@@ -55,7 +55,7 @@ services:
           cpus: "1.00"
           memory: 1G
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -99,12 +99,12 @@ services:
       dockerfile: services/analytics-api/Dockerfile
     environment:
       NODE_ENV: production
-      ANALYTICS_API_PORT: 3001
+      ANALYTICS_API_PORT: 4200
       MONGODB_URL: ${MONGODB_URL:?Set MONGODB_URL to the authenticated managed MongoDB URL}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
     ports:
-      - "${API_BIND_ADDRESS:-127.0.0.1}:${ANALYTICS_API_HOST_PORT:-3001}:3001"
+      - "${API_BIND_ADDRESS:-127.0.0.1}:${ANALYTICS_API_HOST_PORT:-4200}:4200"
     restart: unless-stopped
     deploy:
       replicas: 1
@@ -113,7 +113,7 @@ services:
           cpus: "1.00"
           memory: 1G
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4200/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3

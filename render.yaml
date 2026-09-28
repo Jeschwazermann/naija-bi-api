@@ -114,7 +114,7 @@ services:
     name: naija-bi-dashboard
     runtime: static
     rootDir: client
-    buildCommand: corepack enable && corepack prepare pnpm@12.5.1 --activate && pnpm install --frozen-lockfile && pnpm build
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
     staticPublishPath: dist
     routes:
       - type: rewrite

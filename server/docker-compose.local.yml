@@ -1,0 +1,129 @@
+# Full local stack for validating each service's Dockerfile end-to-end,
+# the same way Render will build them (one Dockerfile per service), before
+# deploying. NOT for production — production points at managed Mongo/Redis
+# and (normally) S3; see docker-compose.prod.yml for that.
+#
+# Usage (from this server/ directory):
+#   docker compose -f docker-compose.local.yml up --build
+#
+# This uses STORAGE_DRIVER=local with a volume shared between upload-api and
+# worker, so a full upload -> process -> analytics round trip works without
+# needing an S3 bucket.
+
+name: naija-bi-local
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - '127.0.0.1:27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '127.0.0.1:6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  auth-api:
+    build:
+      context: .
+      dockerfile: services/auth-api/Dockerfile
+    environment:
+      NODE_ENV: production
+      AUTH_API_PORT: 4100
+      MONGODB_URL: mongodb://mongo:27017/naija_bi
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
+    ports:
+      - '127.0.0.1:4100:4100'
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  init-uploads-volume:
+    image: node:22-alpine
+    user: root
+    command: sh -c "mkdir -p /data/uploads && chown -R 1000:1000 /data/uploads"
+    volumes:
+      - uploads-data:/data/uploads
+
+  upload-api:
+    build:
+      context: .
+      dockerfile: services/upload-api/Dockerfile
+    environment:
+      NODE_ENV: production
+      UPLOAD_API_PORT: 4000
+      MONGODB_URL: mongodb://mongo:27017/naija_bi
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_PATH: /data/uploads
+    ports:
+      - '127.0.0.1:4000:4000'
+    volumes:
+      - uploads-data:/data/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      init-uploads-volume:
+        condition: service_completed_successfully
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/worker/Dockerfile
+    environment:
+      NODE_ENV: production
+      MONGODB_URL: mongodb://mongo:27017/naija_bi
+      REDIS_URL: redis://redis:6379
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-5}
+      HEALTH_PORT: 8080
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_PATH: /data/uploads
+    volumes:
+      - uploads-data:/data/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      init-uploads-volume:
+        condition: service_completed_successfully
+
+  analytics-api:
+    build:
+      context: .
+      dockerfile: services/analytics-api/Dockerfile
+    environment:
+      NODE_ENV: production
+      ANALYTICS_API_PORT: 4200
+      MONGODB_URL: mongodb://mongo:27017/naija_bi
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
+    ports:
+      - '127.0.0.1:4200:4200'
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  redis-data:
+  uploads-data:

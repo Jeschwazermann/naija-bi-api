@@ -12,8 +12,8 @@ export class LocalDiskStorageClient implements StorageClient {
   }
 
   async saveFile(buffer: Buffer, key: string): Promise<SavedFile> {
-    await fs.mkdir(this.#basePath, { recursive: true });
     const fullPath = path.join(this.#basePath, key);
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
     await fs.writeFile(fullPath, buffer);
     return { url: `local://${fullPath}` };
   }

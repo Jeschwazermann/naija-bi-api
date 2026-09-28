@@ -56,7 +56,9 @@ export async function startWebServer() {
   return server;
 }
 
-export async function stopWebServer(server: import('http').Server): Promise<void> {
+export async function stopWebServer(
+  server: import('http').Server
+): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     server.close((error) => (error ? reject(error) : resolve()));
   });
@@ -72,19 +74,27 @@ async function gracefulShutdown(server: import('http').Server) {
 }
 
 if (require.main === module) {
-  startWebServer().then((server) => {
-    process.on('SIGTERM', () => gracefulShutdown(server));
-    process.on('SIGINT', () => gracefulShutdown(server));
-    process.on('uncaughtException', (err) => {
-      logger.error('uncaughtException', {
+  startWebServer()
+    .then((server) => {
+      process.on('SIGTERM', () => gracefulShutdown(server));
+      process.on('SIGINT', () => gracefulShutdown(server));
+      process.on('uncaughtException', (err) => {
+        logger.error('uncaughtException', {
+          message: err.message,
+          stack: err.stack,
+        });
+        process.exit(1);
+      });
+      process.on('unhandledRejection', (reason) => {
+        logger.error('unhandledRejection', { reason: String(reason) });
+        process.exit(1);
+      });
+    })
+    .catch((err) => {
+      logger.error('failed to start', {
         message: err.message,
         stack: err.stack,
       });
       process.exit(1);
     });
-    process.on('unhandledRejection', (reason) => {
-      logger.error('unhandledRejection', { reason: String(reason) });
-      process.exit(1);
-    });
-  });
 }

@@ -3,7 +3,12 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { createLogger, type LoggerConfiguration } from '@naija-bi/logger';
 import { createErrorMiddleware } from '@naija-bi/error-handling';
-import { connectMongo, ensureIndexes, closeMongo, pingMongo } from '@naija-bi/mongo-client';
+import {
+  connectMongo,
+  ensureIndexes,
+  closeMongo,
+  pingMongo,
+} from '@naija-bi/mongo-client';
 import { closeRedisConnection, pingRedis } from '@naija-bi/queue-client';
 import { config } from '../../config';
 import { requestId } from './middlewares/request-id';
@@ -24,7 +29,9 @@ export async function startWebServer() {
 
   const app = express();
   app.use(helmet());
-  app.use(cors({ origin: config.corsOrigin === '*' ? true : config.corsOrigin }));
+  app.use(
+    cors({ origin: config.corsOrigin === '*' ? true : config.corsOrigin })
+  );
   app.use(requestId);
   app.use(express.json());
   app.get('/health', async (_req, res) => {
@@ -53,7 +60,9 @@ export async function startWebServer() {
   return server;
 }
 
-export async function stopWebServer(server: import('http').Server): Promise<void> {
+export async function stopWebServer(
+  server: import('http').Server
+): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     server.close((error) => (error ? reject(error) : resolve()));
   });
@@ -71,16 +80,27 @@ async function gracefulShutdown(server: import('http').Server) {
 }
 
 if (require.main === module) {
-  startWebServer().then((server) => {
-    process.on('SIGTERM', () => gracefulShutdown(server));
-    process.on('SIGINT', () => gracefulShutdown(server));
-    process.on('uncaughtException', (err) => {
-      logger.error('uncaughtException', { message: err.message, stack: err.stack });
+  startWebServer()
+    .then((server) => {
+      process.on('SIGTERM', () => gracefulShutdown(server));
+      process.on('SIGINT', () => gracefulShutdown(server));
+      process.on('uncaughtException', (err) => {
+        logger.error('uncaughtException', {
+          message: err.message,
+          stack: err.stack,
+        });
+        process.exit(1);
+      });
+      process.on('unhandledRejection', (reason) => {
+        logger.error('unhandledRejection', { reason: String(reason) });
+        process.exit(1);
+      });
+    })
+    .catch((err) => {
+      logger.error('failed to start', {
+        message: err.message,
+        stack: err.stack,
+      });
       process.exit(1);
     });
-    process.on('unhandledRejection', (reason) => {
-      logger.error('unhandledRejection', { reason: String(reason) });
-      process.exit(1);
-    });
-  });
 }

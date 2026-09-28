@@ -1,0 +1,33 @@
+# Local dev infra only: Mongo + Redis, matching README step 1
+# ("docker compose up -d # Mongo on :27017, Redis on :6379").
+# Run each service with `pnpm run dev:*` against this, or use
+# docker-compose.local.yml to also containerize the four services.
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - '127.0.0.1:27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '127.0.0.1:6380:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  mongo-data:
+  redis-data:

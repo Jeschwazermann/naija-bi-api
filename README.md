@@ -64,7 +64,7 @@ knows about the database or filesystem).
 ```bash
 # From the server/ directory:
 # 1. infra
-docker compose up -d          # Mongo on :27017, Redis on :6379
+docker compose up -d          # Mongo on :27017, Redis on :6380
 
 # 2. install deps (repo uses pnpm workspaces — no Turborepo, not needed at this scale)
 pnpm install
@@ -91,7 +91,7 @@ Redis are managed services; Compose expects their authenticated URLs and does
 not create database containers. Store deployment values in a protected
 environment file or inject them with the hosting platform's secret manager.
 The APIs bind to loopback host ports by default for local portfolio use:
-auth-api on 3002, upload-api on 3000, and analytics-api on 3001.
+auth-api on 4100, upload-api on 4000, and analytics-api on 4200.
 
 ```bash
 # From this server/ directory, after setting production environment values
@@ -119,8 +119,8 @@ VITE_ANALYTICS_API=https://analytics.example.com \
 pnpm build
 ```
 
-For local testing, use `http://localhost:3002`, `http://localhost:3000`, and
-`http://localhost:3001` as those three URLs. Set `CORS_ORIGIN` in the backend
+For local testing, use `http://localhost:4100`, `http://localhost:4000`, and
+`http://localhost:4200` as those three URLs. Set `CORS_ORIGIN` in the backend
 environment to the dashboard's exact browser origin. For a remote deployment,
 set `API_BIND_ADDRESS=0.0.0.0`, restrict access with the host firewall, and
 terminate HTTPS at an external load balancer or hosting platform.
@@ -152,38 +152,38 @@ Nock, and use real registration-issued JWTs. They never load `server/.env`.
 ```bash
 # register — response includes an access token (short-lived) and a
 # refresh token (long-lived), no separate login needed
-curl -X POST http://localhost:3002/auth/register \
+curl -X POST http://localhost:4100/auth/register \
   -H "Content-Type: application/json" \
   -d '{"businessName":"Ada Stores","email":"ada@example.com","password":"correcthorsebattery"}'
 # → { "accessToken": "...", "refreshToken": "...", "businessId": "...", "businessName": "Ada Stores" }
 
 # or, once registered, log in the same way any time
-curl -X POST http://localhost:3002/auth/login \
+curl -X POST http://localhost:4100/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"ada@example.com","password":"correcthorsebattery"}'
 
 # use the accessToken as <token> below — it expires in 15 minutes by default
-curl -X POST http://localhost:3000/uploads \
+curl -X POST http://localhost:4000/uploads \
   -H "Authorization: Bearer <token>" \
   -F "file=@samples/sample-sales.csv"
 # → { "uploadId": "...", "status": "queued" }
 
-curl http://localhost:3000/uploads/<uploadId> \
+curl http://localhost:4000/uploads/<uploadId> \
   -H "Authorization: Bearer <token>"
 # → status flips queued → processing → completed/failed_partial,
 #   with rowsProcessed / rowsRejected once the worker picks it up
 
-curl "http://localhost:3001/analytics/summary?from=2026-09-01&to=2026-09-30" \
+curl "http://localhost:4200/analytics/summary?from=2026-09-01&to=2026-09-30" \
   -H "Authorization: Bearer <token>"
 
 # once the access token expires, trade the refresh token for a new pair —
 # the old refresh token is revoked in the same call (rotation)
-curl -X POST http://localhost:3002/auth/refresh \
+curl -X POST http://localhost:4100/auth/refresh \
   -H "Content-Type: application/json" \
   -d '{"refreshToken":"<refreshToken>"}'
 
 # and to log out — revokes that refresh token so it can't be used again
-curl -X POST http://localhost:3002/auth/logout \
+curl -X POST http://localhost:4100/auth/logout \
   -H "Content-Type: application/json" \
   -d '{"refreshToken":"<refreshToken>"}'
 ```
@@ -233,11 +233,10 @@ finishes as `failed_partial` with that row listed in `rejectedRows`.
   panel (upload, stats, chart, top products) is its own component reading
   from a small set of hooks (`useSession`, `useDashboardData`).
 
-## Not included (intentionally, to keep this a scaffold not a product)
+## Not included
 
 - Dashboard component tests
 - Password reset, "log out everywhere", email verification
-- Production Dockerfiles / k8s manifests / CI pipeline
 - `CORS_ORIGIN=*` on every API is fine for local dev only — lock it to
   `http://localhost:5174` (or the dashboard's real deployed origin) before
   deploying anywhere shared

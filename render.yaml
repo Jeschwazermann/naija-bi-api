@@ -1,0 +1,109 @@
+envVarGroups:
+  - name: naija-bi-shared
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: LOGGER_LEVEL
+        value: info
+
+services:
+  - type: keyvalue
+    name: naija-bi-redis
+    region: frankfurt
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: naija-bi-auth-api
+    runtime: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./server/services/auth-api/Dockerfile
+    dockerContext: ./server
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: naija-bi-shared
+      - key: AUTH_API_PORT
+        value: 10000
+      - key: MONGODB_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+  - type: web
+    name: naija-bi-upload-api
+    runtime: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./server/services/upload-api/Dockerfile
+    dockerContext: ./server
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: naija-bi-shared
+      - key: UPLOAD_API_PORT
+        value: 10000
+      - key: MONGODB_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: naija-bi-redis
+          property: connectionString
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+
+  - type: web
+    name: naija-bi-analytics-api
+    runtime: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./server/services/analytics-api/Dockerfile
+    dockerContext: ./server
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: naija-bi-shared
+      - key: ANALYTICS_API_PORT
+        value: 10000
+      - key: MONGODB_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+  - type: worker
+    name: naija-bi-worker
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    dockerfilePath: ./server/services/worker/Dockerfile
+    dockerContext: ./server
+    envVars:
+      - fromGroup: naija-bi-shared
+      - key: MONGODB_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: naija-bi-redis
+          property: connectionString
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false

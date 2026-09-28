@@ -101,20 +101,28 @@ async function gracefulShutdown(worker: Worker, healthServer: Server) {
 }
 
 if (require.main === module) {
-  startWorker().then(async (worker) => {
-    const healthServer = await startHealthServer();
-    process.on('SIGTERM', () => gracefulShutdown(worker, healthServer));
-    process.on('SIGINT', () => gracefulShutdown(worker, healthServer));
-    process.on('uncaughtException', (err) => {
-      logger.error('uncaughtException', {
+  startWorker()
+    .then(async (worker) => {
+      const healthServer = await startHealthServer();
+      process.on('SIGTERM', () => gracefulShutdown(worker, healthServer));
+      process.on('SIGINT', () => gracefulShutdown(worker, healthServer));
+      process.on('uncaughtException', (err) => {
+        logger.error('uncaughtException', {
+          message: err.message,
+          stack: err.stack,
+        });
+        process.exit(1);
+      });
+      process.on('unhandledRejection', (reason) => {
+        logger.error('unhandledRejection', { reason: String(reason) });
+        process.exit(1);
+      });
+    })
+    .catch((err) => {
+      logger.error('failed to start', {
         message: err.message,
         stack: err.stack,
       });
       process.exit(1);
     });
-    process.on('unhandledRejection', (reason) => {
-      logger.error('unhandledRejection', { reason: String(reason) });
-      process.exit(1);
-    });
-  });
 }
